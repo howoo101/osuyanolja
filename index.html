@@ -38,10 +38,13 @@ img{max-width:100%}
 
   --biscuit:#E8B46C;
   --biscuit-dk:#C68A43;
-  --fl-choco:#5A2D1D; --fl-choco-hi:#8A533C; --fl-choco-crack:#F6D8BC;
+  --fl-original:#5A2D1D; --fl-original-hi:#8A533C; --fl-original-crack:#F6D8BC;
+  --fl-almond-t:#E6C38E;
+  --fl-nude:#D69C55; --fl-nude-hi:#F3D29B; --fl-nude-crack:#6B3A20;
+  --fl-crunky:#6E3C28; --fl-crunky-hi:#9A644D; --fl-crunky-t:#F2E0C2;
+  --fl-white:#F5EDDF; --fl-white-hi:#FFFFFF; --fl-white-crack:#9A7C5F; --fl-cookie-t:#4A2A1E;
   --fl-straw:#EE8DA7; --fl-straw-hi:#FFC8D5; --fl-straw-crack:#8E3550;
-  --fl-white:#F5EDDF; --fl-white-hi:#FFFFFF; --fl-white-crack:#9A7C5F;
-  --choco:var(--fl-choco); --choco-hi:var(--fl-choco-hi); --crack:var(--fl-choco-crack);
+  --choco:var(--fl-original); --choco-hi:var(--fl-original-hi); --crack:var(--fl-original-crack);
   --on-choco:#FFF2E6;
   --stick-edge:rgba(58,32,25,.22);
 
@@ -73,7 +76,7 @@ img{max-width:100%}
 
 *{box-sizing:border-box}
 html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;word-break:keep-all;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
@@ -82,7 +85,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* header */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.date{font-family:var(--font-display);font-size:15px;line-height:1;color:var(--on-choco);padding:7px 14px 7px 32px;border-radius:999px;background:linear-gradient(90deg,var(--biscuit) 0 20px,var(--fl-choco) 20px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);letter-spacing:.05em;white-space:nowrap}
+.date{font-family:var(--font-display);font-size:15px;line-height:1;color:var(--on-choco);padding:7px 14px 7px 32px;border-radius:999px;background:linear-gradient(90deg,var(--biscuit) 0 20px,var(--fl-original) 20px);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);letter-spacing:.05em;white-space:nowrap}
 h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px,5.5vw,42px);line-height:1;letter-spacing:-.01em;text-wrap:balance}
 .ghost{background:transparent;border:2px solid var(--line);border-radius:999px;padding:8px 14px;font-family:var(--font-display);font-size:15px;color:var(--ink);white-space:nowrap}
 .ghost:hover{border-color:var(--accent)}
@@ -149,8 +152,17 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
 .r-half{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:4 4}
 .r-eat-l{fill:var(--p1-dk)}
 .r-eat-r{fill:var(--p2-dk)}
-#stage.fl-straw{--choco:var(--fl-straw);--choco-hi:var(--fl-straw-hi);--crack:var(--fl-straw-crack)}
-#stage.fl-white{--choco:var(--fl-white);--choco-hi:var(--fl-white-hi);--crack:var(--fl-white-crack)}
+#stage.fl-nude{--choco:var(--fl-nude);--choco-hi:var(--fl-nude-hi);--crack:var(--fl-nude-crack)}
+#stage.fl-crunky{--choco:var(--fl-crunky);--choco-hi:var(--fl-crunky-hi)}
+#stage.fl-whitecookie{--choco:var(--fl-white);--choco-hi:var(--fl-white-hi);--crack:var(--fl-white-crack)}
+#stage.fl-strawberry{--choco:var(--fl-straw);--choco-hi:var(--fl-straw-hi);--crack:var(--fl-straw-crack)}
+#stage.fl-nude .s-choco{stroke-width:16}
+/* toppings: zero-length dashes with round caps draw as bits along the coating */
+.s-top{fill:none;stroke-linecap:round;display:none}
+#stage.fl-almond .s-top{display:inline;stroke:var(--fl-almond-t);stroke-width:5.5;stroke-dasharray:0 11 0 16 0 9 0 14 0 12}
+#stage.fl-crunky .s-top{display:inline;stroke:var(--fl-crunky-t);stroke-width:3.6;stroke-dasharray:0 6 0 8 0 5 0 9 0 7}
+#stage.fl-whitecookie .s-top{display:inline;stroke:var(--fl-cookie-t);stroke-width:3.2;stroke-dasharray:0 9 0 6 0 13 0 7 0 10}
+#stage.fl-nude .s-top1{display:inline;stroke:var(--fl-original);stroke-width:5;opacity:.3}
 
 /* tension meter */
 .meter{display:grid;grid-template-columns:auto minmax(0,1fr) 3.6em;align-items:center;gap:12px}
@@ -183,15 +195,37 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
 .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;border:2px solid var(--line);background:var(--bg);font-family:var(--font-display);font-size:16px}
 .chip:hover{border-color:var(--accent)}
 .chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.sw{display:inline-block;width:32px;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--biscuit) 0 8px,var(--c) 8px);box-shadow:0 0 0 1.5px var(--stick-edge)}
-.sw-choco{--c:var(--fl-choco)}
-.sw-straw{--c:var(--fl-straw)}
-.sw-white{--c:var(--fl-white)}
+.sw{position:relative;display:inline-block;width:32px;height:10px;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,var(--biscuit) 0 8px,var(--c) 8px);box-shadow:0 0 0 1.5px var(--stick-edge)}
+.sw::after{content:"";position:absolute;top:0;bottom:0;left:8px;right:0;background:var(--tex,none)}
+.sw-original{--c:var(--fl-original)}
+.sw-almond{--c:var(--fl-original);--tex:radial-gradient(circle,var(--fl-almond-t) 0 1.6px,transparent 2.1px) 0 50%/6px 10px repeat-x}
+.sw-nude{--c:var(--fl-nude);--tex:linear-gradient(var(--fl-original),var(--fl-original)) 0 50%/100% 3px no-repeat}
+.sw-crunky{--c:var(--fl-crunky);--tex:radial-gradient(circle,var(--fl-crunky-t) 0 1.1px,transparent 1.5px) 0 0/5px 5px}
+.sw-whitecookie{--c:var(--fl-white);--tex:radial-gradient(circle,var(--fl-cookie-t) 0 1.1px,transparent 1.5px) 0 0/6px 5px}
+.sw-strawberry{--c:var(--fl-straw)}
 .rules{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:14.5px;max-width:60ch}
 .rules b{font-family:var(--font-display);font-weight:400;color:var(--accent-deep)}
 .primary{font-family:var(--font-display);font-size:22px;line-height:1.2;padding:14px 28px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);box-shadow:0 5px 0 var(--accent-deep);transition:transform .06s,box-shadow .06s}
 .primary:active{transform:translateY(3px);box-shadow:0 2px 0 var(--accent-deep)}
 .hint{margin:0;font-size:13px;color:var(--muted)}
+.flavor-hint{margin-top:8px}
+.chip:disabled,.primary:disabled{opacity:.45;cursor:default}
+.primary:disabled:active{transform:none;box-shadow:0 5px 0 var(--accent-deep)}
+
+/* online room */
+.online{display:flex;flex-direction:column;gap:12px;width:100%}
+.online-step{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+.or{font-size:13px;color:var(--muted)}
+.code-input{width:7.5em;font-family:var(--font-display);font-size:20px;letter-spacing:.2em;text-transform:uppercase;padding:8px 12px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.link-input{flex:1 1 12em;min-width:0;font:inherit;font-size:13px;padding:9px 12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.room-code{margin:0;font-size:14px;color:var(--muted)}
+.room-code b{display:block;font-family:var(--font-display);font-weight:400;font-size:44px;line-height:1.1;letter-spacing:.18em;color:var(--ink)}
+.net-status{margin:0;font-family:var(--font-display);font-size:17px}
+.net-status.wait::after{content:"";display:inline-block;width:.55em;height:.55em;margin-left:.45em;border-radius:50%;background:var(--accent);animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.2}}
+.net-msg{margin:0;font-size:14px;color:var(--muted);min-height:1.2em}
+.net-msg.err{color:var(--danger)}
 
 .pads{display:grid;grid-template-columns:1fr;gap:12px}
 .pads.two{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -269,7 +303,7 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
   </section>
 
   <div class="stage-wrap">
-    <svg id="stage" class="fl-choco" viewBox="0 0 1000 460" role="img" aria-label="두 캐릭터가 과자 막대의 양 끝을 물고 마주 보고 있어요">
+    <svg id="stage" class="fl-original" viewBox="0 0 1000 460" role="img" aria-label="두 캐릭터가 과자 막대의 양 끝을 물고 마주 보고 있어요">
       <defs>
         <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
           <circle class="dot" cx="8" cy="8" r="2.6"/>
@@ -308,9 +342,10 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
       <div class="menu-opts">
         <div class="field">
           <h2 class="label">누구랑 할까요?</h2>
-          <div class="seg two">
+          <div class="seg three">
             <button type="button" class="opt" id="modeCpu" data-mode="cpu" aria-pressed="true"><span class="opt-title">혼자서</span><span class="opt-sub">컴퓨터와 대결</span></button>
             <button type="button" class="opt" id="mode2p" data-mode="2p" aria-pressed="false"><span class="opt-title">둘이서</span><span class="opt-sub">한 화면에서 같이</span></button>
+            <button type="button" class="opt" id="modeOnline" data-mode="online" aria-pressed="false"><span class="opt-title">온라인</span><span class="opt-sub">각자 폰·PC로 접속</span></button>
           </div>
         </div>
         <div class="field" id="diffField">
@@ -324,10 +359,14 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
         <div class="field">
           <h2 class="label">맛</h2>
           <div class="chips">
-            <button type="button" class="chip" id="flChoco" data-flavor="choco" aria-pressed="true"><i class="sw sw-choco"></i>초코</button>
-            <button type="button" class="chip" id="flStraw" data-flavor="straw" aria-pressed="false"><i class="sw sw-straw"></i>딸기</button>
-            <button type="button" class="chip" id="flWhite" data-flavor="white" aria-pressed="false"><i class="sw sw-white"></i>화이트</button>
+            <button type="button" class="chip" id="flOriginal" data-flavor="original" aria-pressed="true"><i class="sw sw-original"></i>오리지널</button>
+            <button type="button" class="chip" id="flAlmond" data-flavor="almond" aria-pressed="false"><i class="sw sw-almond"></i>아몬드</button>
+            <button type="button" class="chip" id="flNude" data-flavor="nude" aria-pressed="false"><i class="sw sw-nude"></i>누드</button>
+            <button type="button" class="chip" id="flCrunky" data-flavor="crunky" aria-pressed="false"><i class="sw sw-crunky"></i>크런키</button>
+            <button type="button" class="chip" id="flWhitecookie" data-flavor="whitecookie" aria-pressed="false"><i class="sw sw-whitecookie"></i>화이트쿠키</button>
+            <button type="button" class="chip" id="flStrawberry" data-flavor="strawberry" aria-pressed="false"><i class="sw sw-strawberry"></i>딸기</button>
           </div>
+          <p class="hint flavor-hint" id="flavorHint" hidden>온라인 방에서는 방장이 맛을 골라요</p>
         </div>
       </div>
       <div class="menu-side">
@@ -339,7 +378,31 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
           <li>가운데에서 만나거나 30초가 지나면 <b>더 많이 먹은 쪽</b>이 이겨요.</li>
         </ul>
         <button type="button" class="primary" id="startBtn">시작하기</button>
-        <p class="hint">Enter 키로도 시작할 수 있어요</p>
+        <p class="hint" id="startHint">Enter 키로도 시작할 수 있어요</p>
+        <div class="online" id="onlineBox" hidden>
+          <div class="online-step" id="netIdle">
+            <button type="button" class="primary" id="hostBtn">방 만들기</button>
+            <span class="or">또는 친구가 만든 방에 들어가기</span>
+            <div class="row">
+              <input type="text" id="joinCode" class="code-input" maxlength="4" placeholder="코드" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="방 코드 4자리">
+              <button type="button" class="ghost" id="joinBtn">입장</button>
+            </div>
+          </div>
+          <div class="online-step" id="netRoom" hidden>
+            <p class="room-code">방 코드<b id="roomCode">----</b></p>
+            <div class="row link-row" id="linkRow">
+              <input type="text" id="roomLink" class="link-input" readonly aria-label="초대 링크">
+              <button type="button" class="ghost" id="copyLinkBtn">링크 복사</button>
+            </div>
+            <p class="net-status" id="netStatus">친구가 들어오길 기다리는 중</p>
+            <div class="row">
+              <button type="button" class="primary" id="netStartBtn" disabled>시작하기</button>
+              <button type="button" class="ghost small" id="leaveBtn">방 나가기</button>
+            </div>
+          </div>
+          <p class="net-msg" id="netMsg" aria-live="polite"></p>
+          <p class="hint">코드나 링크를 보내면 서로 다른 기기에서 같이 할 수 있어요. 회사·학교 와이파이에서는 연결이 안 될 수도 있어요.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -347,7 +410,7 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
   <section class="panel" id="playPanel" aria-label="먹기 버튼" hidden>
     <div class="pads" id="pads">
       <button type="button" class="pad pad-l" id="padL"><span class="pad-main" id="padLMain">냠!</span><span class="pad-key" id="padLKey">Space 또는 A</span></button>
-      <button type="button" class="pad pad-r" id="padR" hidden><span class="pad-main">2P 냠!</span><span class="pad-key">L</span></button>
+      <button type="button" class="pad pad-r" id="padR" hidden><span class="pad-main" id="padRMain">2P 냠!</span><span class="pad-key" id="padRKey">L</span></button>
     </div>
     <div class="play-foot">
       <span class="tip" id="tip">긴장도가 내려갔을 때 먹어야 안전해요</span>
@@ -392,7 +455,8 @@ const DIFFS = {
   normal: { name:'보통',   cadence:[260,480], tol:84, noise:5,  avoidRush:false },
   hard:   { name:'어려움', cadence:[150,300], tol:80, noise:3,  avoidRush:true  }
 };
-const FLAVORS = ['choco','straw','white'];
+const FLAVORS = { original:'오리지널', almond:'아몬드', nude:'누드', crunky:'크런키', whitecookie:'화이트쿠키', strawberry:'딸기' };
+const OLD_FLAVORS = { choco:'original', straw:'strawberry', white:'whitecookie' };  // saved choices from the first version
 const STORE_KEY = 'pepero-game-v1';
 const reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -402,12 +466,13 @@ const rand = (a,b) => a + Math.random() * (b - a);
 const n1 = v => v.toFixed(1);
 
 /* ---------- settings ---------- */
-const settings = { mode:'cpu', diff:'normal', flavor:'choco', muted:false, wins:{ easy:0, normal:0, hard:0 } };
+const settings = { mode:'cpu', diff:'normal', flavor:'original', muted:false, wins:{ easy:0, normal:0, hard:0 } };
 function mergeSettings(src){
   if (!src || typeof src !== 'object') return;
-  if (src.mode === 'cpu' || src.mode === '2p') settings.mode = src.mode;
+  if (src.mode === 'cpu' || src.mode === '2p' || src.mode === 'online') settings.mode = src.mode;
   if (DIFFS[src.diff]) settings.diff = src.diff;
-  if (FLAVORS.includes(src.flavor)) settings.flavor = src.flavor;
+  const fl = OLD_FLAVORS[src.flavor] || src.flavor;
+  if (Object.prototype.hasOwnProperty.call(FLAVORS, fl)) settings.flavor = fl;
   if (typeof src.muted === 'boolean') settings.muted = src.muted;
   if (src.wins && typeof src.wins === 'object') {
     for (const k of Object.keys(DIFFS)) {
@@ -418,7 +483,16 @@ function mergeSettings(src){
 }
 function loadStore(){ try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
 function saveStore(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch (e) {} }
-function names(){ return settings.mode === 'cpu' ? { L:'나', R:'컴퓨터' } : { L:'1P', R:'2P' }; }
+/* online room state. The host plays the left side and referees; the guest plays the right side. */
+const net = { role:null, status:'idle', peer:null, conn:null, code:'', lastPress:-1e9, lastSync:0, joinTimer:0, libPromise:null };
+const isGuest = () => settings.mode === 'online' && net.role === 'guest';
+const isHost = () => settings.mode === 'online' && net.role === 'host';
+const mySide = () => settings.mode === '2p' ? null : (isGuest() ? 'R' : 'L');
+function names(){
+  if (settings.mode === 'cpu') return { L:'나', R:'컴퓨터' };
+  if (settings.mode === 'online') return net.role === 'guest' ? { L:'친구', R:'나' } : { L:'나', R:'친구' };
+  return { L:'1P', R:'2P' };
+}
 
 /* ---------- scene build ---------- */
 const stage = $('stage');
@@ -446,7 +520,8 @@ function charMarkup(kind){
     '<ellipse class="mouth" cx="-4" cy="0" rx="8" ry="11"/>';
 }
 const LIPS = '<ellipse class="lip lip-t" cx="-4" cy="-11" rx="8.5" ry="6"/><ellipse class="lip lip-b" cx="-4" cy="11" rx="8.5" ry="6"/>';
-const STICK = '<path class="s-edge"/><path class="s-bis"/><path class="s-choco"/><path class="s-hi"/>';
+const STICK = '<path class="s-edge"/><path class="s-bis"/><path class="s-choco"/><path class="s-hi"/><path class="s-top s-top1"/><path class="s-top s-top2"/>';
+let topDy = [-3.6, 3.6];  // vertical offsets of the two topping rows (nude: one faint core line in the middle)
 
 $('charL').innerHTML = charMarkup('p1');
 $('charR').innerHTML = '<g transform="scale(-1 1)">' + charMarkup('p2') + '</g>';
@@ -474,7 +549,7 @@ const rulerL = $('rulerL'), rulerR = $('rulerR');
 
 function pathsOf(id){
   const el = $(id);
-  return { g:el, edge:el.querySelector('.s-edge'), bis:el.querySelector('.s-bis'), choco:el.querySelector('.s-choco'), hi:el.querySelector('.s-hi') };
+  return { g:el, edge:el.querySelector('.s-edge'), bis:el.querySelector('.s-bis'), choco:el.querySelector('.s-choco'), hi:el.querySelector('.s-hi'), top1:el.querySelector('.s-top1'), top2:el.querySelector('.s-top2') };
 }
 const stickP = pathsOf('stick'), pieceLP = pathsOf('pieceL'), pieceRP = pathsOf('pieceR');
 const cracksG = $('cracks');
@@ -568,7 +643,7 @@ function sub(P0, P1, P2, a, b, dy){
 }
 function drawStick(p, xa, xb, bend){
   const len = xb - xa;
-  if (len <= .5) { p.edge.setAttribute('d', ''); p.bis.setAttribute('d', ''); p.choco.setAttribute('d', ''); p.hi.setAttribute('d', ''); return; }
+  if (len <= .5) { [p.edge, p.bis, p.choco, p.hi, p.top1, p.top2].forEach(e => e.setAttribute('d', '')); return; }
   const P0 = [xa, Y], P2 = [xb, Y], P1 = [(xa + xb) / 2, Y + 2 * bend];
   const full = sub(P0, P1, P2, 0, 1);
   p.edge.setAttribute('d', full);
@@ -579,8 +654,15 @@ function drawStick(p, xa, xb, bend){
     p.choco.setAttribute('d', sub(P0, P1, P2, t0, 1));
     const pad = 9 / len, a = t0 + pad, b = 1 - pad;
     p.hi.setAttribute('d', b - a > .02 ? sub(P0, P1, P2, a, b, -4.5) : '');
+    // toppings: dash offset follows the start point so the bits stay put while the stick is eaten
+    const ta = t0 + 4 / len, tb = 1 - 4 / len;
+    if (tb - ta > .01) {
+      const off = cs + 4 - XC;
+      p.top1.setAttribute('d', sub(P0, P1, P2, ta, tb, topDy[0])); p.top1.style.strokeDashoffset = n1(off) + 'px';
+      p.top2.setAttribute('d', sub(P0, P1, P2, ta, tb, topDy[1])); p.top2.style.strokeDashoffset = n1(off + 6) + 'px';
+    } else { p.top1.setAttribute('d', ''); p.top2.setAttribute('d', ''); }
   } else {
-    p.choco.setAttribute('d', ''); p.hi.setAttribute('d', '');
+    [p.choco, p.hi, p.top1, p.top2].forEach(e => e.setAttribute('d', ''));
   }
 }
 
@@ -662,6 +744,7 @@ function applySettingsUI(){
   document.querySelectorAll('[data-flavor]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.flavor === settings.flavor)));
   $('diffField').hidden = settings.mode !== 'cpu';
   stage.setAttribute('class', 'fl-' + settings.flavor);
+  topDy = settings.flavor === 'nude' ? [0, 0] : [-3.6, 3.6];
   const n = names();
   $('nameL').textContent = n.L; $('nameR').textContent = n.R;
   $('winsEasy').textContent = '통산 ' + settings.wins.easy + '승';
@@ -670,14 +753,18 @@ function applySettingsUI(){
   const sb = $('soundBtn');
   sb.setAttribute('aria-pressed', String(!settings.muted));
   sb.textContent = settings.muted ? '소리 끔' : '소리 켬';
+  renderNet();
 }
 
 function configurePads(){
-  const two = settings.mode === '2p';
-  $('padR').hidden = !two;
-  $('pads').classList.toggle('two', two);
+  const m = settings.mode, two = m === '2p';
+  const showL = !(m === 'online' && isGuest()), showR = two || isGuest();
+  $('padL').hidden = !showL; $('padR').hidden = !showR;
+  $('pads').classList.toggle('two', showL && showR);
   $('padLMain').textContent = two ? '1P 냠!' : '냠!';
   $('padLKey').textContent = two ? 'A' : 'Space 또는 A';
+  $('padRMain').textContent = two ? '2P 냠!' : '냠!';
+  $('padRKey').textContent = two ? 'L' : 'Space 또는 A';
 }
 function setPadsEnabled(on){ $('padL').disabled = !on; $('padR').disabled = !on; }
 function flashPad(side){
@@ -703,7 +790,22 @@ function startGame(){
   setPadsEnabled(true);
   showPanel('play');
   $('copyText').hidden = true; $('copyMsg').textContent = '';
+  net.lastPress = -1e9; net.lastSync = 0;
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  if (isHost()) send({ t:'start', flavor: settings.flavor });
+}
+
+/* Start button, "한 판 더" and Enter all come here. In an online room only the host starts; the guest asks the host. */
+function requestStart(){
+  if (settings.mode === 'online') {
+    if (!(net.conn && net.conn.open)) { netMsg('아직 친구와 연결되지 않았어요. 방을 만들거나 코드로 들어가 주세요.', true); return; }
+    if (isGuest()) { send({ t:'again' }); $('copyMsg').textContent = '방장에게 한 판 더 하자고 보냈어요.'; return; }
+  }
+  startGame();
+}
+function quitRound(){
+  if (settings.mode === 'online') send({ t:'abort' });
+  goMenu();
 }
 
 function goMenu(){
@@ -725,11 +827,13 @@ function updateCountdown(now){
   }
 }
 
-function bite(side){
+/* gapMs: for the online guest, the time since their previous press measured on their own device,
+   so network jitter does not turn steady bites into "허겁지겁" */
+function bite(side, gapMs){
   if (state !== 'play' || !g) return;
   const now = performance.now();
   const key = side === 'L' ? 'lastL' : 'lastR';
-  const since = now - g[key];
+  const since = gapMs != null ? gapMs : now - g[key];
   if (since < MIN_GAP) return;
   g[key] = now;
 
@@ -747,17 +851,22 @@ function bite(side){
   if (side === 'L') g.eatL += size; else g.eatR += size;
   g.stress += add;
 
+  biteFx(side, rushed);
+  flashPad(side);
+  if (isHost()) send({ t:'bite', side, eatL:g.eatL, eatR:g.eatR, stress:g.stress, rushed });
+
+  if (g.stress >= g.threshold) { endRound('snap', side); return; }
+  if (goal) endRound('goal');
+}
+
+function biteFx(side, rushed){
   const dir = side === 'L' ? 1 : -1;
   const mx = side === 'L' ? X0 + g.eatL * PX : X1 - g.eatR * PX;
   C[side].kick = 1; kickBend = 5;
   const inChoco = side === 'R' || g.eatL > CHOCO_FROM;
   spawnCrumbs(mx + dir * 4, Y, reduced ? 2 : 5, inChoco ? .65 : 0);
   sCrunch();
-  if (settings.mode === '2p' || side === 'L') flashPad(side);
   if (rushed) spawnFloat(mx + dir * 40, Y - 100, '허겁지겁!');
-
-  if (g.stress >= g.threshold) { endRound('snap', side); return; }
-  if (goal) endRound('goal');
 }
 
 function cpuThink(now){
@@ -774,7 +883,8 @@ function cpuThink(now){
   if (g.stress + add < limit) bite('R');
 }
 
-function endRound(type, side){
+/* remote: the host's verdict when this screen is the online guest */
+function endRound(type, side, remote){
   if (state !== 'play') return;
   const now = performance.now();
   state = 'over';
@@ -785,11 +895,15 @@ function endRound(type, side){
     const d = g.eatL - g.eatR;
     g.winner = Math.abs(d) < .05 ? 'tie' : (d > 0 ? 'L' : 'R');
   }
+  if (remote) {
+    g.elapsed = clamp(Number(remote.elapsed) || 0, 0, TIME_LIMIT);
+    if (remote.winner === 'L' || remote.winner === 'R' || remote.winner === 'tie') g.winner = remote.winner;
+  }
   setPadsEnabled(false);
 
   const mxL = X0 + g.eatL * PX, mxR = X1 - g.eatR * PX;
   if (type === 'snap') {
-    const xs = mxL + (mxR - mxL) * rand(.38, .62);
+    const xs = remote && typeof remote.xs === 'number' ? clamp(remote.xs, mxL, mxR) : mxL + (mxR - mxL) * rand(.38, .62);
     g.piece = { xs, aL:0, vL:0, aR:0, vR:0 };
     drawStick(pieceLP, mxL, xs, 0);
     drawStick(pieceRP, xs, mxR, 0);
@@ -811,6 +925,9 @@ function endRound(type, side){
   if (settings.mode === 'cpu' && g.winner === 'L') {
     settings.wins[settings.diff] += 1; g.justWon = true; saveStore();
   }
+  if (isHost() && !remote) {
+    send({ t:'end', type, side: side || null, winner: g.winner, eatL: g.eatL, eatR: g.eatR, elapsed: g.elapsed, xs: g.piece ? g.piece.xs : null });
+  }
   const token = g;
   setTimeout(() => { if (g === token && state === 'over') showResult(); }, 1150);
 }
@@ -821,14 +938,15 @@ function showResult(){
   const n = names(), w = g.winner, cpu = settings.mode === 'cpu';
   const rem = LEN - g.eatL - g.eatR;
   const kicker = { goal:'골인', snap:'뚝! 부러졌어요', time:'시간 끝' }[g.end];
+  const mine = mySide(), rival = cpu ? '컴퓨터' : '친구';
   let title;
   if (w === 'tie') title = '무승부!';
-  else if (cpu) title = w === 'L' ? '내가 이겼어요!' : '컴퓨터가 이겼어요';
-  else title = (w === 'L' ? '1P' : '2P') + ' 승리!';
+  else if (!mine) title = (w === 'L' ? '1P' : '2P') + ' 승리!';
+  else title = w === mine ? '내가 이겼어요!' : rival + '가 이겼어요';
 
   let desc;
   if (g.end === 'snap') {
-    const who = cpu ? (g.snapper === 'L' ? '내' : '컴퓨터의') : (g.snapper === 'L' ? '1P의' : '2P의');
+    const who = !mine ? (g.snapper === 'L' ? '1P의' : '2P의') : (g.snapper === mine ? '내' : rival + '의');
     desc = who + ' 한 입에 막대가 부러졌어요. 욕심은 금물!';
   } else if (g.end === 'goal') {
     const total = g.eatL + g.eatR;
@@ -858,7 +976,7 @@ function showResult(){
     : '';
   $('resRecord').hidden = !cpu;
 
-  resultText = '빼빼로 게임 11.11 | ' + n.L + ' ' + (g.eatL / 10).toFixed(1) + 'cm vs ' + n.R +
+  resultText = '빼빼로 게임 11.11 (' + FLAVORS[settings.flavor] + ') | ' + n.L + ' ' + (g.eatL / 10).toFixed(1) + 'cm vs ' + n.R +
     (cpu ? '(' + d.name + ')' : '') + ' ' + (g.eatR / 10).toFixed(1) + 'cm | ' + kicker + ' | ' + title;
   $('copyMsg').textContent = ''; $('copyText').hidden = true;
   showPanel('result');
@@ -999,34 +1117,285 @@ function render(now, dt){
   if (av !== lastAria) { lastAria = av; hud.bar.setAttribute('aria-valuenow', String(av)); }
 }
 
-let lastT = performance.now();
-function loop(now){
-  const realDt = Math.min(.5, Math.max(0, (now - lastT) / 1000)); // game logic: real time, so slow frames don't freeze tension
-  const dt = Math.min(.05, realDt);                                 // animation: clamped for smooth motion
-  lastT = now;
+let lastT = performance.now(), lastStepT = performance.now();
+/* game logic on real time. Runs from the animation loop, and from a timer whenever animation frames stall
+   (background tabs, switched apps), so an online round keeps going for the other player. */
+function step(now){
+  const realDt = Math.min(1.5, Math.max(0, (now - lastStepT) / 1000));
+  lastStepT = Math.max(lastStepT, now);
   if (state === 'countdown' && g) updateCountdown(now);
   if (state === 'play' && g) {
     g.elapsed = (now - g.start) / 1000;
     g.stress = Math.max(0, g.stress - DECAY * realDt);
     if (settings.mode === 'cpu') cpuThink(now);
-    if (state === 'play' && g.elapsed >= TIME_LIMIT) endRound('time');
+    if (isGuest()) g.elapsed = Math.min(g.elapsed, TIME_LIMIT);     // the host decides when time is up
+    else if (state === 'play' && g.elapsed >= TIME_LIMIT) endRound('time');
+    if (state === 'play' && isHost() && now - net.lastSync > 100) {
+      net.lastSync = now;
+      send({ t:'sync', eatL:g.eatL, eatR:g.eatR, stress:g.stress, elapsed:g.elapsed });
+    }
   } else if (state === 'over' && g) {
     g.stress = Math.max(0, g.stress - DECAY * realDt * 1.5);
   }
+}
+function loop(now){
+  const dt = Math.min(.05, Math.max(0, (now - lastT) / 1000));  // animation: clamped for smooth motion
+  lastT = now;
+  step(now);
   render(now, dt);
   requestAnimationFrame(loop);
 }
+setInterval(() => { const now = performance.now(); if (now - lastT > 200) step(now); }, 100);
+
+/* ---------- online (PeerJS, browser to browser) ---------- */
+const PEER_LIB = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+const PEER_PREFIX = 'pepero1111-room-';
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O, 1/I/L to avoid typos
+
+function send(m){ if (net.conn && net.conn.open) { try { net.conn.send(m); } catch (e) {} } }
+function normCode(s){ return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); }
+function makeCode(){
+  let s = '';
+  const buf = new Uint32Array(4);
+  try { crypto.getRandomValues(buf); } catch (e) { for (let i = 0; i < 4; i++) buf[i] = Math.floor(Math.random() * 1e9); }
+  for (let i = 0; i < 4; i++) s += CODE_CHARS[buf[i] % CODE_CHARS.length];
+  return s;
+}
+function roomLink(){ return location.origin + location.pathname + '?room=' + net.code; }
+function netMsg(text, err){ const el = $('netMsg'); el.textContent = text || ''; el.classList.toggle('err', !!err); }
+function setStatus(s){ net.status = s; applySettingsUI(); }
+
+function renderNet(){
+  const online = settings.mode === 'online';
+  $('onlineBox').hidden = !online;
+  $('startBtn').hidden = online;
+  $('startHint').hidden = online;
+  const inRoom = online && (net.status === 'hosting' || net.status === 'connected');
+  $('netIdle').hidden = inRoom;
+  $('netRoom').hidden = !inRoom;
+  $('hostBtn').disabled = $('joinBtn').disabled = net.status === 'loading';
+  const host = net.role === 'host', open = !!(net.conn && net.conn.open);
+  if (inRoom) {
+    $('roomCode').textContent = net.code;
+    $('linkRow').hidden = !host;
+    $('roomLink').value = roomLink();
+    $('netStartBtn').hidden = !host;
+    $('netStartBtn').disabled = !open;
+    const st = $('netStatus');
+    st.textContent = host ? (open ? '친구가 들어왔어요! 시작해 볼까요?' : '친구가 들어오길 기다리는 중')
+                          : '연결됐어요. 방장이 시작하면 바로 시작돼요';
+    st.classList.toggle('wait', !host || !open);
+  }
+  const lock = online && net.role === 'guest' && net.status === 'connected';
+  document.querySelectorAll('[data-flavor]').forEach(b => { b.disabled = lock; });
+  $('flavorHint').hidden = !lock;
+}
+
+function loadPeerLib(){
+  if (window.Peer) return Promise.resolve();
+  if (net.libPromise) return net.libPromise;
+  net.libPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = PEER_LIB; s.async = true;
+    s.onload = () => (window.Peer ? resolve() : reject(new Error('no Peer')));
+    s.onerror = () => { net.libPromise = null; s.remove(); reject(new Error('load failed')); };
+    document.head.appendChild(s);
+  });
+  return net.libPromise;
+}
+
+function errMsg(err){
+  const t = err && err.type;
+  if (t === 'peer-unavailable') return '그 코드의 방이 없어요. 코드를 다시 확인해 주세요.';
+  if (t === 'browser-incompatible') return '이 브라우저는 온라인 대결을 지원하지 않아요. 크롬이나 사파리로 열어 주세요.';
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return '연결 서버에 접속하지 못했어요. 잠시 후 다시 시도해 주세요.';
+  return '연결에 실패했어요. 다시 시도해 주세요.';
+}
+
+function netTeardown(){
+  clearTimeout(net.joinTimer);
+  const conn = net.conn, peer = net.peer;
+  net.conn = null; net.peer = null; net.role = null; net.code = '';
+  try { if (conn) conn.close(); } catch (e) {}
+  try { if (peer) peer.destroy(); } catch (e) {}
+}
+function netFail(msg){
+  netTeardown();
+  if (state !== 'menu') goMenu();
+  setStatus('idle');
+  netMsg(msg, true);
+}
+function netLeave(){
+  send({ t:'bye' });
+  netTeardown();
+  setStatus('idle');
+  netMsg('');
+}
+function onNetLost(){
+  const host = net.role === 'host';
+  net.conn = null;
+  if (state !== 'menu') goMenu();
+  if (host && net.peer) { setStatus('hosting'); netMsg('친구가 나갔어요. 같은 코드로 다시 들어올 수 있어요.'); }
+  else { netTeardown(); setStatus('idle'); netMsg('방장과 연결이 끊겼어요.', true); }
+}
+
+function attachConn(conn){
+  net.conn = conn;
+  conn.on('open', () => {
+    if (net.conn !== conn) return;
+    clearTimeout(net.joinTimer);
+    if (net.role === 'host') send({ t:'welcome', flavor: settings.flavor });
+    netMsg('');
+    setStatus('connected');
+  });
+  conn.on('data', m => { if (net.conn === conn) onNetData(m); });
+  conn.on('close', () => { if (net.conn === conn) onNetLost(); });
+  conn.on('error', () => { if (net.conn === conn) onNetLost(); });
+}
+
+async function hostRoom(){
+  netTeardown(); netMsg('연결 준비 중이에요…'); setStatus('loading');
+  try { await loadPeerLib(); } catch (e) { netFail('온라인 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+  openHostPeer(0);
+}
+function openHostPeer(attempt){
+  const code = makeCode();
+  let peer;
+  try { peer = new window.Peer(PEER_PREFIX + code, { debug: 0 }); } catch (e) { netFail(errMsg(e)); return; }
+  net.peer = peer; net.role = 'host'; net.code = code;
+  peer.on('open', () => { if (net.peer !== peer) return; netMsg(''); setStatus('hosting'); });
+  peer.on('connection', conn => {
+    if (net.peer !== peer) return;
+    if (net.conn && net.conn.open) {           // room is full
+      conn.on('open', () => { try { conn.send({ t:'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); });
+      return;
+    }
+    attachConn(conn);
+  });
+  peer.on('disconnected', () => {             // lost the signalling server; the game link itself may still be fine
+    if (net.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} }
+  });
+  peer.on('error', err => {
+    if (net.peer !== peer) return;
+    if (err && err.type === 'unavailable-id' && attempt < 4) { net.peer = null; try { peer.destroy(); } catch (e) {} openHostPeer(attempt + 1); return; }
+    if (err && err.type === 'peer-unavailable') return;
+    if (net.conn && net.conn.open) return;     // keep playing if the room link is alive
+    netFail(errMsg(err));
+  });
+}
+
+async function joinRoom(raw){
+  const code = normCode(raw);
+  if (code.length !== 4) { netMsg('방 코드 4자리를 입력해 주세요.', true); return; }
+  netTeardown(); netMsg('방을 찾는 중이에요…'); setStatus('loading');
+  try { await loadPeerLib(); } catch (e) { netFail('온라인 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+  let peer;
+  try { peer = new window.Peer({ debug: 0 }); } catch (e) { netFail(errMsg(e)); return; }
+  net.peer = peer; net.role = 'guest'; net.code = code;
+  peer.on('open', () => {
+    if (net.peer !== peer) return;
+    attachConn(peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' }));
+    net.joinTimer = setTimeout(() => {
+      if (net.peer === peer && !(net.conn && net.conn.open)) netFail('방에 연결하지 못했어요. 코드를 확인하거나, 와이파이 대신 모바일 데이터로 다시 해 보세요.');
+    }, 15000);
+  });
+  peer.on('error', err => {
+    if (net.peer !== peer) return;
+    if (net.conn && net.conn.open) return;
+    netFail(errMsg(err));
+  });
+}
+
+function onNetData(m){
+  if (!m || typeof m !== 'object') return;
+  const host = net.role === 'host';
+  switch (m.t) {
+    case 'full':
+      netFail('이미 두 명이 들어간 방이에요.'); break;
+    case 'welcome': case 'flavor':
+      if (!host && Object.prototype.hasOwnProperty.call(FLAVORS, m.flavor)) { settings.flavor = m.flavor; applySettingsUI(); }
+      break;
+    case 'start':
+      if (!host) {
+        if (Object.prototype.hasOwnProperty.call(FLAVORS, m.flavor)) settings.flavor = m.flavor;
+        applySettingsUI(); startGame();
+      }
+      break;
+    case 'bite':
+      if (host) { if (state === 'play') bite('R', clamp(Number(m.gap) || 0, 0, 99999)); }
+      else applyRemoteBite(m);
+      break;
+    case 'sync':
+      if (!host) applySync(m); break;
+    case 'end':
+      if (!host) applyRemoteEnd(m); break;
+    case 'again':
+      if (host && (state === 'over' || state === 'menu')) startGame();
+      break;
+    case 'abort':
+      if (state !== 'menu') { goMenu(); netMsg(host ? '친구가 판을 그만뒀어요.' : '방장이 판을 그만뒀어요.'); }
+      break;
+    case 'bye':
+      onNetLost(); break;
+  }
+}
+
+/* guest side: show what the host decided */
+function catchUpToPlay(){
+  if (g && state === 'countdown') { state = 'play'; g.start = performance.now(); }
+}
+function readEat(m){ g.eatL = clamp(Number(m.eatL) || 0, 0, LEN); g.eatR = clamp(Number(m.eatR) || 0, 0, LEN); }
+function applyRemoteBite(m){
+  if (!g || (m.side !== 'L' && m.side !== 'R')) return;
+  catchUpToPlay();
+  if (state !== 'play') return;
+  readEat(m);
+  g.stress = Math.max(0, Number(m.stress) || 0);
+  biteFx(m.side, !!m.rushed);
+}
+function applySync(m){
+  if (!g) return;
+  catchUpToPlay();
+  if (state !== 'play') return;
+  readEat(m);
+  g.stress = Math.max(0, Number(m.stress) || 0);
+  g.start = performance.now() - clamp(Number(m.elapsed) || 0, 0, TIME_LIMIT) * 1000;
+}
+function applyRemoteEnd(m){
+  if (!g) return;
+  catchUpToPlay();
+  if (state !== 'play') return;
+  readEat(m);
+  const type = m.type === 'snap' || m.type === 'goal' || m.type === 'time' ? m.type : 'time';
+  endRound(type, m.side === 'L' || m.side === 'R' ? m.side : null, m);
+}
+function guestPress(){
+  if (state !== 'play' || !g) return;
+  const now = performance.now(), gap = now - net.lastPress;
+  if (gap < MIN_GAP) return;
+  net.lastPress = now;
+  send({ t:'bite', gap: Math.min(gap, 99999) });
+  flashPad('R');
+}
 
 /* ---------- input ---------- */
+function press(side){
+  const m = settings.mode;
+  if (m === 'cpu' && side !== 'L') return;
+  if (m === 'online') {
+    if (side !== mySide()) return;
+    if (isGuest()) { guestPress(); return; }
+  }
+  bite(side);
+}
 function bindPad(id, side){
   const el = $(id);
   el.addEventListener('pointerdown', e => {
     if (e.button !== undefined && e.button > 0) return;
     e.preventDefault();
-    if (settings.mode === 'cpu' && side === 'R') return;
-    bite(side);
+    press(side);
   });
-  el.addEventListener('click', e => { if (e.detail === 0) bite(side); });
+  el.addEventListener('click', e => { if (e.detail === 0) press(side); });
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
 bindPad('padL', 'L');
@@ -1036,33 +1405,55 @@ window.addEventListener('keydown', e => {
   const code = e.code;
   if (state === 'play' || state === 'countdown') {
     if (code === 'Space' || code === 'KeyA' || code === 'KeyL') e.preventDefault();
-    if (code === 'Escape') { goMenu(); return; }
+    if (code === 'Escape') { quitRound(); return; }
     if (e.repeat || state !== 'play') return;
-    if (settings.mode === 'cpu') { if (code === 'Space' || code === 'KeyA') bite('L'); }
-    else { if (code === 'KeyA') bite('L'); else if (code === 'KeyL') bite('R'); }
+    if (settings.mode === '2p') { if (code === 'KeyA') press('L'); else if (code === 'KeyL') press('R'); }
+    else if (code === 'Space' || code === 'KeyA') press(mySide());
     return;
   }
   if (code === 'Enter' || code === 'NumpadEnter') {
     const ae = document.activeElement;
-    if (ae && (ae.tagName === 'BUTTON' || ae.tagName === 'TEXTAREA')) return;
-    if (state === 'menu' || (state === 'over' && !$('resultPanel').hidden)) { e.preventDefault(); startGame(); }
+    if (ae && (ae.tagName === 'BUTTON' || ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT')) return;
+    if (state === 'menu' || (state === 'over' && !$('resultPanel').hidden)) { e.preventDefault(); requestStart(); }
   }
 });
+['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => { if (!actx || actx.state === 'suspended') ensureAudio(); }, { passive: true }));
+window.addEventListener('pagehide', () => send({ t:'bye' }));
 window.addEventListener('keyup', e => {
   if ((state === 'play' || state === 'countdown') && e.code === 'Space') e.preventDefault();
 });
 
-document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { settings.mode = b.dataset.mode; saveStore(); applySettingsUI(); }));
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  const prev = settings.mode;
+  settings.mode = b.dataset.mode;
+  if (prev === 'online' && settings.mode !== 'online' && net.peer) netLeave();
+  saveStore(); applySettingsUI();
+}));
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { settings.diff = b.dataset.diff; saveStore(); applySettingsUI(); }));
-document.querySelectorAll('[data-flavor]').forEach(b => b.addEventListener('click', () => { settings.flavor = b.dataset.flavor; saveStore(); applySettingsUI(); }));
+document.querySelectorAll('[data-flavor]').forEach(b => b.addEventListener('click', () => {
+  settings.flavor = b.dataset.flavor; saveStore(); applySettingsUI();
+  if (isHost()) send({ t:'flavor', flavor: settings.flavor });
+}));
+$('hostBtn').addEventListener('click', hostRoom);
+$('joinBtn').addEventListener('click', () => joinRoom($('joinCode').value));
+$('joinCode').addEventListener('input', e => { const v = normCode(e.target.value); if (v !== e.target.value) e.target.value = v; });
+$('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinRoom(e.target.value); } });
+$('netStartBtn').addEventListener('click', requestStart);
+$('leaveBtn').addEventListener('click', netLeave);
+$('copyLinkBtn').addEventListener('click', () => {
+  const inp = $('roomLink');
+  const ok = () => netMsg('초대 링크를 복사했어요. 친구에게 보내 주세요.');
+  const fail = () => { inp.focus(); inp.select(); netMsg('링크를 선택해 뒀어요. 복사해서 보내 주세요.'); };
+  try { navigator.clipboard.writeText(roomLink()).then(ok, fail); } catch (e) { fail(); }
+});
 $('soundBtn').addEventListener('click', () => {
   settings.muted = !settings.muted; saveStore(); applySettingsUI();
   if (!settings.muted) { ensureAudio(); sBeep(660); }
 });
-$('startBtn').addEventListener('click', startGame);
-$('againBtn').addEventListener('click', startGame);
+$('startBtn').addEventListener('click', requestStart);
+$('againBtn').addEventListener('click', requestStart);
 $('menuBtn').addEventListener('click', goMenu);
-$('quitBtn').addEventListener('click', goMenu);
+$('quitBtn').addEventListener('click', quitRound);
 $('copyBtn').addEventListener('click', () => {
   const text = resultText;
   const done = () => { $('copyText').hidden = true; $('copyMsg').textContent = '복사했어요. 메신저에 붙여 넣어 보세요.'; };
@@ -1082,6 +1473,18 @@ mergeSettings(loadStore());
 applySettingsUI();
 showPanel('menu');
 requestAnimationFrame(now => { lastT = now; loop(now); });
+
+/* invite link: ?room=CODE joins that room right away */
+(function autoJoin(){
+  let code = '';
+  try { code = normCode(new URLSearchParams(location.search).get('room')); } catch (e) {}
+  if (code.length !== 4) return;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  settings.mode = 'online';
+  $('joinCode').value = code;
+  applySettingsUI();
+  joinRoom(code);
+})();
 })();
 </script>
 </body>
