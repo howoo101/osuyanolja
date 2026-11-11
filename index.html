@@ -208,7 +208,6 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
 .primary{font-family:var(--font-display);font-size:22px;line-height:1.2;padding:14px 28px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);box-shadow:0 5px 0 var(--accent-deep);transition:transform .06s,box-shadow .06s}
 .primary:active{transform:translateY(3px);box-shadow:0 2px 0 var(--accent-deep)}
 .hint{margin:0;font-size:13px;color:var(--muted)}
-.flavor-hint{margin-top:8px}
 .chip:disabled,.primary:disabled{opacity:.45;cursor:default}
 .primary:disabled:active{transform:none;box-shadow:0 5px 0 var(--accent-deep)}
 
@@ -366,7 +365,6 @@ h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:clamp(28px
             <button type="button" class="chip" id="flWhitecookie" data-flavor="whitecookie" aria-pressed="false"><i class="sw sw-whitecookie"></i>화이트쿠키</button>
             <button type="button" class="chip" id="flStrawberry" data-flavor="strawberry" aria-pressed="false"><i class="sw sw-strawberry"></i>딸기</button>
           </div>
-          <p class="hint flavor-hint" id="flavorHint" hidden>온라인 방에서는 방장이 맛을 골라요</p>
         </div>
       </div>
       <div class="menu-side">
@@ -486,8 +484,8 @@ function mergeSettings(src){
 function loadStore(){ try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
 function saveStore(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch (e) {} }
 /* online room state. The host plays the left side and referees; the guest plays the right side. */
-const net = { role:null, status:'idle', peer:null, conn:null, code:'', token:'', opened:false, guestCid:null,
-              giveUpAt:0, attempts:0, timer:0, lastPress:-1e9, lastSync:0, libPromise:null };
+const net = { role:null, status:'idle', peer:null, conn:null, code:'', token:'', opened:false, took:false, guestCid:null,
+              since:0, fails:0, silent:0, attempts:0, timer:0, lastPress:-1e9, lastSync:0, libPromise:null };
 const isGuest = () => settings.mode === 'online' && net.role === 'guest';
 const isHost = () => settings.mode === 'online' && net.role === 'host';
 const mySide = () => settings.mode === '2p' ? null : (isGuest() ? 'R' : 'L');
@@ -798,11 +796,15 @@ function startGame(){
   if (isHost()) send({ t:'start', flavor: settings.flavor });
 }
 
-/* Start button, "한 판 더" and Enter all come here. In an online room only the host starts; the guest asks the host. */
+/* Start button, "한 판 더" and Enter all come here. Online, the host runs the round, so the guest asks it to start. */
 function requestStart(){
   if (settings.mode === 'online') {
     if (!(net.conn && net.conn.open)) { netMsg('아직 친구와 연결되지 않았어요. 방을 만들거나 코드로 들어가 주세요.', true); return; }
-    if (isGuest()) { send({ t:'again' }); $('copyMsg').textContent = '방장에게 한 판 더 하자고 보냈어요.'; return; }
+    if (isGuest()) {
+      send({ t:'again' });
+      if (state === 'over') $('copyMsg').textContent = '친구에게 한 판 더 하자고 보냈어요.';
+      return;
+    }
   }
   startGame();
 }
@@ -1152,18 +1154,23 @@ setInterval(() => { const now = performance.now(); if (now - lastT > 200) step(n
 
 /* ---------- online (PeerJS, browser to browser) ---------- */
 /* PeerJS's public server only introduces the two browsers; game data then flows directly between them.
-   Phones pause a page as soon as you switch apps (for example to send the link on KakaoTalk), and the
-   paused page drops off the server. So neither side gives up on the first miss:
-   - the host takes the same room code back when it returns, even after a refresh (same tab, same token)
-   - the guest keeps knocking for a while, and rejoins by itself after a drop or a refresh */
+   Whoever holds the room code on the server is the host (left side, referee); the other page connects to it.
+   Phones pause a page as soon as you switch apps (for example to send the link on KakaoTalk), and a paused
+   page drops off the server sooner or later. So nobody ever gives up on the room:
+   - the host takes its code back whenever it returns, even after a refresh (same tab, same token)
+   - a friend who arrives while nobody holds the code holds it instead, so the room never vanishes
+   - a page that finds its code held by the friend simply connects to the friend */
 const PEER_LIB = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
 const PEER_PREFIX = 'pepero1111-room-';
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O, 1/I/L to avoid typos
 const ROOM_KEY = 'pepero-room';                         // sessionStorage: this tab's room, so a refresh returns to it
-const JOIN_PATIENCE = 120000;                           // how long a guest keeps trying to reach the host
-const HOST_PATIENCE = 90000;                            // how long a host keeps trying to take its room code back
+const TRY_MS = 10000;                                   // a join attempt that got no answer at all is retried after this
+const STUCK_MS = 9000;                                  // a host registration that stalls this long is started over
 const LIB_FAIL = '온라인 기능을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.';
-const WAIT_HOST = '방장을 기다리는 중이에요. 방장 폰에서 게임 화면을 열어 두면 바로 연결돼요. 코드가 맞는지도 확인해 주세요.';
+const NO_SERVER = '연결 서버에 닿지 않아요. 인터넷 연결을 확인해 주세요. 계속 다시 시도하고 있어요.';
+const SLOW_JOIN = '친구 화면이 꺼져 있거나 네트워크가 직접 연결을 막고 있어요. 친구가 게임 화면을 켜 두면 바로 연결돼요. 계속 안 되면 한 명이 모바일 데이터로 바꿔 보세요.';
+const TOOK_ROOM = '친구가 지금 게임 화면에 없어서 이 화면에서 방을 열어 뒀어요. 친구가 돌아오면 바로 연결돼요.';
+const GAVE_ROOM = '친구가 방을 열어 두고 있어요. 친구에게 연결하는 중이에요…';
 
 function randomId(n){
   const buf = new Uint32Array(n);
@@ -1172,15 +1179,16 @@ function randomId(n){
   for (let i = 0; i < n; i++) s += CODE_CHARS[buf[i] % CODE_CHARS.length];
   return s;
 }
-/* identifies this tab to the host, so a friend who refreshes gets their seat back */
-const CLIENT_ID = (() => {
+function tabValue(key, n){
   try {
-    let id = sessionStorage.getItem('pepero-cid');
-    if (!id) { id = randomId(12); sessionStorage.setItem('pepero-cid', id); }
-    return id;
-  } catch (e) { return randomId(12); }
-})();
-function rememberRoom(){ try { sessionStorage.setItem(ROOM_KEY, JSON.stringify({ role: net.role, code: net.code, token: net.token })); } catch (e) {} }
+    let v = sessionStorage.getItem(key);
+    if (!v) { v = randomId(n); sessionStorage.setItem(key, v); }
+    return v;
+  } catch (e) { return randomId(n); }
+}
+const CLIENT_ID = tabValue('pepero-cid', 12);   // tells the host "the same friend is back" after a refresh
+const TAB_TOKEN = tabValue('pepero-tok', 16);   // lets this tab take its room code back on the server right away
+function rememberRoom(){ try { sessionStorage.setItem(ROOM_KEY, JSON.stringify({ role: net.role, code: net.code, token: net.token, took: net.took })); } catch (e) {} }
 function forgetRoom(){ try { sessionStorage.removeItem(ROOM_KEY); } catch (e) {} }
 function savedRoom(){ try { return JSON.parse(sessionStorage.getItem(ROOM_KEY) || 'null'); } catch (e) { return null; } }
 function setRoomUrl(code){ try { history.replaceState(null, '', location.pathname + (code ? '?room=' + code : '')); } catch (e) {} }
@@ -1203,26 +1211,24 @@ function renderNet(){
   $('netIdle').hidden = inRoom;
   $('netRoom').hidden = !inRoom;
   $('hostBtn').disabled = $('joinBtn').disabled = st === 'loading';
-  if (inRoom) {
-    $('roomCode').textContent = net.code;
-    $('linkRow').hidden = !host;
-    $('roomLink').value = roomLink();
-    $('shareBtn').hidden = !(host && navigator.share);
-    $('netStartBtn').hidden = !host;
-    $('netStartBtn').disabled = !open;
-    let text;
-    if (host) text = open ? '친구가 들어왔어요! 시작해 볼까요?' : st === 'reopening' ? '방을 다시 여는 중' : '친구가 들어오길 기다리는 중';
-    else text = open ? '연결됐어요. 방장이 시작하면 바로 시작돼요' : '방장에게 연결하는 중';
-    const el = $('netStatus');
-    el.textContent = text;
-    el.classList.toggle('wait', !(host && open));
-    $('roomHint').textContent = host && !open
-      ? '링크를 보낸 뒤에는 이 화면으로 돌아와 주세요. 방장 화면이 열려 있어야 친구가 들어올 수 있어요.'
-      : '새로고침하거나 잠깐 다른 앱에 다녀와도 같은 방으로 다시 연결돼요.';
-  }
-  const lock = online && guest && open;
-  document.querySelectorAll('[data-flavor]').forEach(b => { b.disabled = lock; });
-  $('flavorHint').hidden = !lock;
+  if (!inRoom) return;
+  const maker = host && !net.took;               // this page made the room, so it hands out the link
+  $('roomCode').textContent = net.code;
+  $('linkRow').hidden = !maker;
+  $('roomLink').value = roomLink();
+  $('shareBtn').hidden = !(maker && navigator.share);
+  $('netStartBtn').disabled = !open;
+  let text;
+  if (open) text = '친구와 연결됐어요! 시작해 볼까요?';
+  else if (host) text = st === 'reopening' ? '방을 다시 여는 중' : net.took ? '친구가 돌아오길 기다리는 중' : '친구가 들어오길 기다리는 중';
+  else text = '친구에게 연결하는 중';
+  const el = $('netStatus');
+  el.textContent = text;
+  el.classList.toggle('wait', !open);
+  $('roomHint').textContent = open ? '둘 중 누가 눌러도 같이 시작돼요.'
+    : maker ? '링크를 보낸 뒤에는 이 화면으로 돌아와 주세요. 이 화면이 열려 있어야 친구가 들어올 수 있어요.'
+    : host ? '방 코드가 맞는지도 한번 확인해 주세요.'
+    : '새로고침하거나 잠깐 다른 앱에 다녀와도 같은 방으로 다시 연결돼요.';
 }
 
 function loadPeerLib(){
@@ -1241,18 +1247,17 @@ function loadPeerLib(){
 function errMsg(err){
   const t = err && err.type;
   if (t === 'browser-incompatible') return '이 브라우저는 온라인 대결을 지원하지 않아요. 크롬이나 사파리로 열어 주세요.';
-  if (t === 'unavailable-id') return '방을 만들지 못했어요. 잠시 후 다시 시도해 주세요.';
   if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return '연결 서버에 접속하지 못했어요. 잠시 후 다시 시도해 주세요.';
   return '연결에 실패했어요. 다시 시도해 주세요.';
 }
 
 /* ---- leaving and losing the room ---- */
+function dropPeer(){ const p = net.peer; net.peer = null; try { if (p) p.destroy(); } catch (e) {} }
+function dropConn(){ const c = net.conn; net.conn = null; try { if (c) c.close(); } catch (e) {} }
 function netTeardown(){
   clearTimeout(net.timer);
-  const conn = net.conn, peer = net.peer;
-  Object.assign(net, { conn:null, peer:null, role:null, code:'', token:'', opened:false, guestCid:null, giveUpAt:0, attempts:0 });
-  try { if (conn) conn.close(); } catch (e) {}
-  try { if (peer) peer.destroy(); } catch (e) {}
+  dropConn(); dropPeer();
+  Object.assign(net, { role:null, code:'', token:'', opened:false, took:false, guestCid:null, since:0, fails:0, silent:0, attempts:0 });
 }
 function netStop(msg, err){
   netTeardown();
@@ -1266,18 +1271,18 @@ function netLeave(){ send({ t:'closed' }); netStop(''); }
 
 /* the game link to the other player dropped: refresh, app switch, network change, or they left */
 function onNetLost(left, wasOpen){
-  const c = net.conn; net.conn = null;
-  try { if (c) c.close(); } catch (e) {}
+  dropConn();
   if (state !== 'menu') goMenu();
   if (net.role === 'host') {
-    setStatus('hosting');
     if (left) netMsg('친구가 방을 나갔어요. 같은 코드로 다시 들어올 수 있어요.');
     else if (wasOpen) netMsg('친구와 연결이 끊겼어요. 친구가 다시 들어오면 이어서 할 수 있어요.');
     else netMsg('친구가 들어오려 했지만 연결되지 않았어요. 계속 그러면 둘 중 한 명이 다른 네트워크(모바일 데이터 등)로 바꿔 보세요.', true);
+    setStatus(net.peer && net.peer.open ? 'hosting' : 'reopening');
     ensureHost();
   } else if (net.role === 'guest') {
-    if (left) { netStop('방장이 방을 닫았어요.', true); return; }
-    if (wasOpen) { net.giveUpAt = performance.now() + JOIN_PATIENCE; netMsg('연결이 끊겼어요. 다시 연결하는 중이에요…'); }
+    if (left) { netStop('친구가 방을 나갔어요.', true); return; }
+    if (wasOpen) netMsg('연결이 끊겼어요. 다시 연결하는 중이에요…');
+    else if (++net.silent >= 2) netMsg(SLOW_JOIN, true);
     setStatus('joining');
     scheduleJoin(wasOpen ? 600 : 2500);
   }
@@ -1290,7 +1295,7 @@ function attachConn(conn){
     if (net.conn !== conn) return;
     opened = true;
     clearTimeout(net.timer);
-    net.attempts = 0;
+    net.attempts = 0; net.silent = 0;
     if (net.role === 'host') send({ t:'welcome', flavor: settings.flavor });
     netMsg('');
     setStatus('connected');
@@ -1300,75 +1305,76 @@ function attachConn(conn){
   conn.on('error', () => { if (net.conn === conn) onNetLost(false, opened); });
 }
 
-/* ---- host ---- */
-async function hostRoom(reopenCode, reopenToken){
+/* ---- host: holds the room code on the server ---- */
+async function hostRoom(code, opts){
+  opts = opts || {};
   netTeardown();
   net.role = 'host';
-  net.code = reopenCode || randomId(4);
-  net.token = reopenToken || randomId(16);   // the server lets the same token take its id back right away
-  net.opened = !!reopenCode;                  // a code we owned before: wait for it rather than pick a new one
-  net.giveUpAt = performance.now() + HOST_PATIENCE;
-  netMsg(reopenCode ? '' : '방을 만드는 중이에요…');
-  setStatus(reopenCode ? 'reopening' : 'loading');
+  net.code = code || randomId(4);
+  net.token = opts.token || TAB_TOKEN;   // the server lets the same token take its code back right away
+  net.opened = !!code;                   // a code the friend may already have: never trade it for another
+  net.took = !!opts.took;
+  netMsg(code ? '' : '방을 만드는 중이에요…');
+  setStatus(code ? 'reopening' : 'loading');
   try { await loadPeerLib(); } catch (e) { netFail(LIB_FAIL); return; }
-  if (net.role !== 'host') return;            // left while loading
+  if (net.role !== 'host') return;       // left while loading
   ensureHost();
 }
-/* make sure this tab is on the server under the room code; safe to call at any time */
+/* make sure this tab holds the room code on the server; safe to call at any time, never gives up */
 function ensureHost(){
   if (net.role !== 'host') return;
   clearTimeout(net.timer);
   const p = net.peer;
-  if (p && !p.destroyed) {
-    if (p.open) return;
-    if (p.disconnected) { try { p.reconnect(); } catch (e) {} }
-    net.timer = setTimeout(ensureHost, 3000);   // not back yet: look again
+  if (!p || p.destroyed) { newHostPeer(); return; }
+  if (p.open) { net.since = 0; return; }
+  const now = performance.now();
+  if (!net.since) net.since = now;
+  if (!isOpen() && net.status === 'hosting') setStatus('reopening');
+  if (p.disconnected) { try { p.reconnect(); } catch (e) {} }
+  else if (!isOpen() && now - net.since > STUCK_MS) {
+    // still not registered and no error either (a stalled connection on a flaky network): start over
+    dropPeer(); net.since = 0;
+    net.timer = setTimeout(ensureHost, 1500);
     return;
   }
-  newHostPeer();
+  net.timer = setTimeout(ensureHost, 2000);
 }
+const retryMs = () => Math.min(1500 * Math.max(1, net.fails), 6000);
 function newHostPeer(){
   let p;
   try { p = new window.Peer(PEER_PREFIX + net.code, { debug: 0, token: net.token }); } catch (e) { netFail(errMsg(e)); return; }
-  net.peer = p;
-  clearTimeout(net.timer);
-  net.timer = setTimeout(ensureHost, 8000);
+  net.peer = p; net.since = performance.now();
+  clearTimeout(net.timer); net.timer = setTimeout(ensureHost, 3000);
   p.on('open', () => {
     if (net.peer !== p) return;
     clearTimeout(net.timer);
-    net.opened = true;
-    net.giveUpAt = performance.now() + HOST_PATIENCE;
+    if (net.status === 'loading' || net.fails) netMsg('');
+    net.opened = true; net.since = 0; net.fails = 0;
     rememberRoom(); setRoomUrl(net.code);
-    if (!isOpen()) { if (net.status !== 'hosting') netMsg(''); setStatus('hosting'); }
+    if (!isOpen()) setStatus('hosting');
   });
   p.on('connection', conn => onIncoming(p, conn));
   p.on('disconnected', () => {               // off the server (app switch, network); a live game link keeps working
     if (net.peer !== p) return;
     if (!isOpen()) setStatus('reopening');
-    clearTimeout(net.timer); net.timer = setTimeout(ensureHost, 1000);
+    clearTimeout(net.timer); net.timer = setTimeout(ensureHost, net.fails ? retryMs() : 1000);
   });
   p.on('error', err => {
     if (net.peer !== p) return;
     const t = err && err.type;
-    if (t === 'peer-unavailable') return;
     if (t === 'browser-incompatible') { netFail(errMsg(err)); return; }
-    if (isOpen()) return;                      // the game link is fine; the server link gets fixed when it ends
+    if (t === 'peer-unavailable' || isOpen()) return;   // the game link is fine; the server link gets fixed when it ends
     clearTimeout(net.timer);
     if (t === 'unavailable-id') {
-      net.peer = null; try { p.destroy(); } catch (e) {}
-      if (performance.now() > net.giveUpAt) {
-        if (!net.opened) { netFail(errMsg(err)); return; }
-        net.opened = false; net.code = randomId(4); net.token = randomId(16); net.giveUpAt = performance.now() + HOST_PATIENCE;
-        netMsg('이전 방을 다시 열지 못해서 새 방을 만들었어요. 새 코드나 링크를 친구에게 보내 주세요.', true);
-        newHostPeer();
-        return;
-      }
-      if (!net.opened) net.code = randomId(4);   // a brand-new code was taken: pick another
-      net.timer = setTimeout(ensureHost, net.opened ? 2000 : 300);
+      dropPeer();
+      if (!net.opened) { net.code = randomId(4); net.timer = setTimeout(ensureHost, 300); return; }   // a brand-new code was taken: pick another
+      joinAsGuest(GAVE_ROOM);                 // the friend holds our code now (they kept the room while we were away)
       return;
     }
-    if (performance.now() > net.giveUpAt) { netFail(errMsg(err)); return; }
-    net.timer = setTimeout(ensureHost, 2000);
+    net.fails++;
+    if (!net.opened && net.fails >= 3) { netFail(errMsg(err)); return; }   // could not even make the room
+    if (net.fails >= 2) netMsg(NO_SERVER, true);
+    net.timer = setTimeout(ensureHost, retryMs());
   });
 }
 function onIncoming(p, conn){
@@ -1388,33 +1394,51 @@ function onIncoming(p, conn){
   net.guestCid = cid;
   attachConn(conn);
 }
+/* nobody holds the room code on the server (the other page is closed or asleep): hold it here, so whoever
+   comes back finds this page. If someone else got there first, newHostPeer hears so and joins them instead. */
+function takeRoom(){
+  clearTimeout(net.timer);
+  dropConn(); dropPeer();
+  Object.assign(net, { role:'host', opened:true, took:true, guestCid:null, since:0, fails:0, silent:0, attempts:0 });
+  netMsg(TOOK_ROOM);
+  setStatus('reopening');
+  ensureHost();
+}
 
-/* ---- guest ---- */
+/* ---- guest: connects to whoever holds the room code ---- */
 async function joinRoom(raw){
   const code = normCode(raw);
   if (code.length !== 4) { netMsg('방 코드 4자리를 입력해 주세요.', true); return; }
   netTeardown();
-  net.role = 'guest'; net.code = code; net.giveUpAt = performance.now() + JOIN_PATIENCE;
+  net.role = 'guest'; net.code = code; net.token = TAB_TOKEN;
   rememberRoom(); setRoomUrl(code);
   netMsg(''); setStatus('joining');
   try { await loadPeerLib(); } catch (e) { netFail(LIB_FAIL); return; }
   if (net.role !== 'guest' || net.code !== code) return;
   tryJoin();
 }
+/* this page's room code is held by the friend now: connect to them, keeping the same code */
+function joinAsGuest(msg){
+  clearTimeout(net.timer);
+  dropConn(); dropPeer();
+  Object.assign(net, { role:'guest', opened:false, took:false, guestCid:null, since:0, fails:0, silent:0, attempts:0 });
+  rememberRoom(); setRoomUrl(net.code);
+  netMsg(msg || '');
+  setStatus('joining');
+  tryJoin();
+}
 function scheduleJoin(ms){ clearTimeout(net.timer); net.timer = setTimeout(tryJoin, ms); }
 function tryJoin(){
   if (net.role !== 'guest' || isOpen()) return;
   clearTimeout(net.timer);
-  if (performance.now() > net.giveUpAt) {
-    netFail('방에 연결하지 못했어요. 방장 화면이 열려 있는지 확인해 주세요. 그래도 안 되면 네트워크가 직접 연결을 막는 경우예요. 둘 중 한 명이 모바일 데이터로 바꿔 보세요.');
-    return;
-  }
-  const old = net.conn; net.conn = null;
-  try { if (old) old.close(); } catch (e) {}
-  net.timer = setTimeout(tryJoin, 10000);           // this attempt went nowhere: try again
+  dropConn();
+  net.timer = setTimeout(() => {                    // no answer at all: the other page is asleep, or the network is in the way
+    if (++net.silent >= 2) netMsg(SLOW_JOIN, true);
+    tryJoin();
+  }, TRY_MS);
   let p = net.peer;
   net.attempts++;
-  if (p && net.attempts % 4 === 0) { net.peer = null; try { p.destroy(); } catch (e) {} p = null; }   // now and then, start from a fresh server link
+  if (p && net.attempts % 4 === 0) { dropPeer(); p = null; }   // now and then, start from a fresh server link
   if (p && !p.destroyed) {
     if (p.open) connectToHost();
     else if (p.disconnected) { try { p.reconnect(); } catch (e) {} }   // 'open' fires again, then we connect
@@ -1432,15 +1456,14 @@ function newGuestPeer(){
     const t = err && err.type;
     if (t === 'browser-incompatible') { netFail(errMsg(err)); return; }
     if (isOpen()) return;
-    if (t === 'peer-unavailable') netMsg(WAIT_HOST);
+    if (t === 'peer-unavailable') { takeRoom(); return; }   // nobody holds the room right now
     scheduleJoin(2500);
   });
 }
 function connectToHost(){
   const p = net.peer;
   if (!p || p.destroyed || !p.open) return;
-  const old = net.conn; net.conn = null;
-  try { if (old) old.close(); } catch (e) {}
+  dropConn();
   attachConn(p.connect(PEER_PREFIX + net.code, { reliable: true, serialization: 'json', metadata: { cid: CLIENT_ID } }));
 }
 
@@ -1454,8 +1477,8 @@ function wakeNet(longAway){
     if (longAway && !isOpen() && p && !p.destroyed && p.open) { try { p.disconnect(); } catch (e) {} }
     ensureHost();
   } else if (!isOpen()) {
-    if (longAway && p) { net.peer = null; try { p.destroy(); } catch (e) {} }
-    net.giveUpAt = Math.max(net.giveUpAt, performance.now() + JOIN_PATIENCE);
+    if (longAway) dropPeer();
+    net.silent = 0;
     tryJoin();
   }
 }
@@ -1474,8 +1497,8 @@ function onNetData(m){
   switch (m.t) {
     case 'full':
       netFail('이미 두 명이 들어간 방이에요.'); break;
-    case 'welcome': case 'flavor':
-      if (!host && Object.prototype.hasOwnProperty.call(FLAVORS, m.flavor)) { settings.flavor = m.flavor; applySettingsUI(); }
+    case 'welcome': case 'flavor':   // either player can pick the flavor; the host's pick wins when a friend arrives
+      if (Object.prototype.hasOwnProperty.call(FLAVORS, m.flavor) && m.flavor !== settings.flavor) { settings.flavor = m.flavor; applySettingsUI(); }
       break;
     case 'start':
       if (!host) {
@@ -1495,7 +1518,7 @@ function onNetData(m){
       if (host && (state === 'over' || state === 'menu')) startGame();
       break;
     case 'abort':
-      if (state !== 'menu') { goMenu(); netMsg(host ? '친구가 판을 그만뒀어요.' : '방장이 판을 그만뒀어요.'); }
+      if (state !== 'menu') { goMenu(); netMsg('친구가 판을 그만뒀어요.'); }
       break;
     case 'bye':        // the other page is closing or refreshing; it will probably be back
       onNetLost(false, true); break;
@@ -1599,7 +1622,7 @@ document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click'
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { settings.diff = b.dataset.diff; saveStore(); applySettingsUI(); }));
 document.querySelectorAll('[data-flavor]').forEach(b => b.addEventListener('click', () => {
   settings.flavor = b.dataset.flavor; saveStore(); applySettingsUI();
-  if (isHost()) send({ t:'flavor', flavor: settings.flavor });
+  if (settings.mode === 'online') send({ t:'flavor', flavor: settings.flavor });
 }));
 $('hostBtn').addEventListener('click', () => hostRoom());
 $('shareBtn').addEventListener('click', async () => {
@@ -1658,7 +1681,7 @@ requestAnimationFrame(now => { lastT = now; loop(now); });
   $('joinCode').value = code;
   applySettingsUI();
   const saved = savedRoom();
-  if (saved && saved.role === 'host' && saved.code === code && saved.token) hostRoom(code, saved.token);
+  if (saved && saved.role === 'host' && saved.code === code) hostRoom(code, { token: saved.token, took: saved.took });
   else joinRoom(code);
 })();
 })();
